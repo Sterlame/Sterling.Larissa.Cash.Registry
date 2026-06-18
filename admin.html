@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — S&L Registry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-deep:#2d4a2d; --green-mid:#3d6b3d; --green-light:#6a9a6a;
+      --green-pale:#e8f0e8; --cream:#faf9f6; --white:#ffffff;
+      --text:#1e2e1e; --text-light:#5a6e5a; --border:#c8d8c8; --red:#c0392b;
+    }
+    body { font-family:'Jost',sans-serif; background:var(--cream); color:var(--text); min-height:100vh; }
+
+    .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .login-box { background:var(--white); border:1px solid var(--border); border-radius:4px; padding:48px 36px; max-width:360px; width:100%; text-align:center; }
+    .login-box .monogram { font-family:'EB Garamond',serif; font-size:1.6rem; font-weight:600; color:var(--green-deep); letter-spacing:0.12em; margin-bottom:8px; }
+    .login-box p { font-size:0.8rem; color:var(--text-light); margin-bottom:32px; }
+    .login-box input { width:100%; border:1px solid var(--border); border-radius:2px; padding:11px 14px; font-family:'Jost',sans-serif; font-size:0.9rem; background:var(--cream); outline:none; text-align:center; letter-spacing:0.2em; }
+    .login-box input:focus { border-color:var(--green-mid); }
+    .login-btn { margin-top:14px; width:100%; background:var(--green-deep); color:var(--white); border:none; padding:12px; font-family:'Jost',sans-serif; font-size:0.75rem; letter-spacing:0.18em; text-transform:uppercase; cursor:pointer; border-radius:2px; }
+    .login-btn:hover { background:var(--green-mid); }
+    .login-error { margin-top:12px; font-size:0.78rem; color:var(--red); display:none; }
+
+    #adminPanel { display:none; }
+    .admin-header { background:var(--green-deep); color:var(--white); padding:16px 28px; display:flex; align-items:center; justify-content:space-between; }
+    .admin-header .monogram { font-family:'EB Garamond',serif; font-size:1.2rem; letter-spacing:0.12em; }
+    .admin-header-right { display:flex; align-items:center; gap:16px; }
+    .header-btn { background:none; border:1px solid rgba(255,255,255,0.4); color:var(--white); padding:6px 14px; font-family:'Jost',sans-serif; font-size:0.7rem; letter-spacing:0.14em; text-transform:uppercase; cursor:pointer; border-radius:2px; text-decoration:none; }
+    .header-btn:hover { background:rgba(255,255,255,0.1); }
+
+    .admin-body { max-width:960px; margin:0 auto; padding:36px 24px 80px; }
+
+    .admin-card { background:var(--white); border:1px solid var(--border); border-radius:4px; margin-bottom:24px; overflow:hidden; }
+    .admin-card-header { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .admin-card-title { font-family:'Cormorant Garamond',serif; font-size:1.2rem; color:var(--green-deep); }
+    .admin-card-body { padding:24px; }
+
+    .settings-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+    .settings-row label { font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-light); min-width:160px; }
+    .settings-row input { flex:1; min-width:200px; border:1px solid var(--border); border-radius:2px; padding:9px 12px; font-family:'Jost',sans-serif; font-size:0.9rem; background:var(--cream); outline:none; }
+    .settings-row input:focus { border-color:var(--green-mid); }
+    .settings-row .hint { font-size:0.72rem; color:var(--text-light); width:100%; padding-left:172px; font-style:italic; }
+
+    .cat-list { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+    .cat-pill { display:flex; align-items:center; gap:6px; background:var(--green-pale); border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:0.78rem; }
+    .cat-pill button { background:none; border:none; cursor:pointer; color:var(--text-light); font-size:0.8rem; padding:0; }
+    .cat-pill button:hover { color:var(--red); }
+    .inline-add { display:flex; gap:8px; align-items:center; }
+    .inline-add input { border:1px solid var(--border); border-radius:2px; padding:7px 12px; font-family:'Jost',sans-serif; font-size:0.85rem; background:var(--cream); outline:none; width:180px; }
+    .inline-add input:focus { border-color:var(--green-mid); }
+
+    .btn-sm { background:var(--green-deep); color:var(--white); border:none; padding:7px 16px; font-family:'Jost',sans-serif; font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; border-radius:2px; }
+    .btn-sm:hover { background:var(--green-mid); }
+    .btn-sm.danger { background:var(--red); }
+    .btn-sm.danger:hover { background:#a93226; }
+    .btn-sm.ghost { background:none; border:1px solid var(--border); color:var(--text-light); }
+    .btn-sm.ghost:hover { border-color:var(--green-mid); color:var(--green-deep); }
+
+    .items-table { width:100%; border-collapse:collapse; }
+    .items-table th { text-align:left; font-size:0.65rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--text-light); padding:0 12px 10px; border-bottom:1px solid var(--border); }
+    .items-table td { padding:14px 12px; border-bottom:1px solid var(--border); font-size:0.85rem; vertical-align:middle; }
+    .items-table tr:last-child td { border-bottom:none; }
+    .items-table tr:hover td { background:var(--green-pale); }
+    .item-title-cell { font-weight:500; color:var(--green-deep); }
+    .progress-mini { display:flex; align-items:center; gap:8px; }
+    .progress-mini .bar { flex:1; height:4px; background:var(--green-pale); border-radius:2px; min-width:60px; }
+    .progress-mini .fill { height:100%; background:var(--green-mid); border-radius:2px; }
+    .progress-mini span { font-size:0.75rem; color:var(--text-light); white-space:nowrap; }
+    .action-btns { display:flex; gap:6px; }
+
+    .add-form { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .form-field { display:flex; flex-direction:column; gap:6px; }
+    .form-field.full { grid-column:1/-1; }
+    .form-field label { font-size:0.68rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-light); }
+    .form-field input, .form-field select, .form-field textarea { border:1px solid var(--border); border-radius:2px; padding:9px 12px; font-family:'Jost',sans-serif; font-size:0.88rem; background:var(--cream); outline:none; color:var(--text); }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color:var(--green-mid); }
+    .form-field textarea { resize:vertical; min-height:72px; }
+    .form-actions { grid-column:1/-1; display:flex; gap:10px; justify-content:flex-end; }
+
+    .edit-overlay { display:none; position:fixed; inset:0; background:rgba(30,46,30,0.5); z-index:500; align-items:center; justify-content:center; padding:24px; }
+    .edit-overlay.open { display:flex; }
+    .edit-modal { background:var(--white); border-radius:4px; padding:32px; max-width:560px; width:100%; max-height:90vh; overflow-y:auto; position:relative; }
+    .edit-modal h2 { font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:var(--green-deep); margin-bottom:20px; }
+    .modal-close { position:absolute; top:16px; right:16px; background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text-light); }
+
+    .pledge-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:0.84rem; gap:12px; }
+    .pledge-row:last-child { border-bottom:none; }
+    .pledge-name { font-weight:500; }
+    .pledge-amt { color:var(--green-mid); font-weight:500; white-space:nowrap; }
+    .pledge-date { font-size:0.72rem; color:var(--text-light); }
+    .pledge-note { font-size:0.76rem; color:var(--text-light); font-style:italic; }
+    .empty-pledges { font-size:0.84rem; color:var(--text-light); font-style:italic; padding:12px 0; }
+    .image-preview { margin-top:8px; max-width:200px; max-height:120px; object-fit:cover; border-radius:3px; border:1px solid var(--border); display:none; }
+    .image-preview.visible { display:block; }
+    .override-row { display:flex; align-items:center; gap:10px; margin-top:16px; padding-top:16px; border-top:1px solid var(--border); flex-wrap:wrap; }
+    .override-row label { font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-light); }
+    .override-row input { border:1px solid var(--border); border-radius:2px; padding:7px 10px; font-family:'Jost',sans-serif; font-size:0.88rem; width:100px; background:var(--cream); outline:none; }
+    .override-row input:focus { border-color:var(--green-mid); }
+
+    .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--green-deep); color:var(--white); padding:12px 24px; border-radius:3px; font-size:0.82rem; letter-spacing:0.06em; transition:transform 0.3s ease; z-index:9999; pointer-events:none; white-space:nowrap; }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .toast.error { background:var(--red); }
+
+    .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:6px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    @media(max-width:580px) {
+      .add-form { grid-template-columns:1fr; }
+      .form-field.full { grid-column:1; }
+      .settings-row .hint { padding-left:0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="monogram">S&amp;L</div>
+    <p>Registry Admin</p>
+    <input type="password" id="passwordInput" placeholder="Enter password" />
+    <button class="login-btn" id="loginBtn">Enter</button>
+    <div class="login-error" id="loginError">Incorrect password.</div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <div class="admin-header">
+    <span class="monogram">S&amp;L — Admin</span>
+    <div class="admin-header-right">
+      <a href="index.html" class="header-btn">View Public Page</a>
+      <button class="header-btn" id="logoutBtn">Log Out</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- Settings -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <span class="admin-card-title">Settings</span>
+        <button class="btn-sm" id="saveSettings">Save Settings</button>
+      </div>
+      <div class="admin-card-body">
+        <div class="settings-row">
+          <label>Apps Script URL</label>
+          <input type="url" id="settingsScriptUrl" placeholder="https://script.google.com/macros/s/…/exec" />
+        </div>
+        <div class="settings-row">
+          <label></label>
+          <span class="hint">Paste your Web App URL here after deploying the Apps Script.</span>
+        </div>
+        <div class="settings-row">
+          <label>Admin Password</label>
+          <input type="password" id="settingsPassword" placeholder="Leave blank to keep current" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="admin-card">
+      <div class="admin-card-header"><span class="admin-card-title">Categories</span></div>
+      <div class="admin-card-body">
+        <div class="cat-list" id="catList"></div>
+        <div class="inline-add">
+          <input type="text" id="newCatInput" placeholder="New category name" />
+          <button class="btn-sm" id="addCatBtn">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <span class="admin-card-title">Gift Items</span>
+        <button class="btn-sm ghost" id="refreshBtn">↻ Refresh from Sheet</button>
+      </div>
+      <div class="admin-card-body">
+        <table class="items-table">
+          <thead><tr><th>Item</th><th>Category</th><th>Progress</th><th>Actions</th></tr></thead>
+          <tbody id="itemsTbody"><tr><td colspan="4" style="padding:20px;color:var(--text-light);font-style:italic">Load items using Refresh.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add Item -->
+    <div class="admin-card">
+      <div class="admin-card-header"><span class="admin-card-title">Add New Item</span></div>
+      <div class="admin-card-body">
+        <div class="add-form">
+          <div class="form-field"><label>Title</label><input type="text" id="newTitle" placeholder="e.g. One Night of Accommodation" /></div>
+          <div class="form-field"><label>Category</label><select id="newCategory"></select></div>
+          <div class="form-field"><label>Goal Amount (CAD $)</label><input type="number" id="newGoal" placeholder="150" min="1" step="1" /></div>
+          <div class="form-field full"><label>Description</label><textarea id="newDescription" placeholder="A brief description shown on the card…"></textarea></div>
+          <div class="form-field full"><label>Image URL <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional — paste any image URL or Google Drive share link)</span></label><input type="url" id="newImageUrl" placeholder="https://…  or paste a Google Drive share link" /></div>
+          <div class="form-actions"><button class="btn-sm" id="addItemBtn">Add Item</button></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="edit-overlay" id="editOverlay">
+  <div class="edit-modal">
+    <button class="modal-close" id="editClose">✕</button>
+    <h2 id="editModalTitle">Edit Item</h2>
+    <div class="add-form">
+      <div class="form-field"><label>Title</label><input type="text" id="editTitle" /></div>
+      <div class="form-field"><label>Category</label><select id="editCategory"></select></div>
+      <div class="form-field"><label>Goal ($)</label><input type="number" id="editGoal" min="1" step="1" /></div>
+      <div class="form-field full"><label>Description</label><textarea id="editDescription"></textarea></div>
+      <div class="form-field full"><label>Image URL <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label><input type="url" id="editImageUrl" placeholder="https://…  or paste a Google Drive share link" /><img id="editImagePreview" class="image-preview" alt="preview" /></div>
+      <div class="form-actions">
+        <button class="btn-sm ghost" id="editCancel">Cancel</button>
+        <button class="btn-sm" id="editSave">Save Changes</button>
+      </div>
+    </div>
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border)">
+      <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-light);margin-bottom:14px;">Pledges Received</div>
+      <div id="pledgesList"></div>
+      <div class="override-row">
+        <label>Override Total ($)</label>
+        <input type="number" id="overridePledged" min="0" step="0.01" />
+        <button class="btn-sm" id="overrideBtn">Set Total</button>
+        <span style="font-size:0.72rem;color:var(--text-light)">Use this to manually correct the pledged amount</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PASS_KEY   = 'sl_admin_pass';
+const SCRIPT_KEY = 'sl_script_url';
+const CATS_KEY   = 'sl_categories';
+
+let editingItem = null;
+let allItems = [];
+
+// ── AUTH ──
+function getPass() { return localStorage.getItem(PASS_KEY) || 'sterling2026'; }
+function getScriptUrl() { return localStorage.getItem(SCRIPT_KEY) || ''; }
+
+document.getElementById('loginBtn').addEventListener('click', tryLogin);
+document.getElementById('passwordInput').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
+
+function tryLogin() {
+  if (document.getElementById('passwordInput').value === getPass()) {
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    initAdmin();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('passwordInput').value = '';
+  }
+}
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  document.getElementById('adminPanel').style.display = 'none';
+  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('passwordInput').value = '';
+});
+
+// ── INIT ──
+function initAdmin() {
+  document.getElementById('settingsScriptUrl').value = getScriptUrl();
+  renderCategories();
+  populateCatDropdown('newCategory');
+  if (getScriptUrl()) refreshItems();
+}
+
+// ── SETTINGS ──
+document.getElementById('saveSettings').addEventListener('click', () => {
+  const url = document.getElementById('settingsScriptUrl').value.trim();
+  const pass = document.getElementById('settingsPassword').value;
+  if (url) localStorage.setItem(SCRIPT_KEY, url);
+  if (pass) { localStorage.setItem(PASS_KEY, pass); document.getElementById('settingsPassword').value = ''; }
+  showToast('Settings saved.');
+  if (url) refreshItems();
+});
+
+// ── CATEGORIES (stored locally, synced to sheet on item operations) ──
+function getCategories() {
+  try { return JSON.parse(localStorage.getItem(CATS_KEY)) || ['Honeymoon','Wedding']; } catch(e) { return ['Honeymoon','Wedding']; }
+}
+function saveCategories(cats) { localStorage.setItem(CATS_KEY, JSON.stringify(cats)); }
+
+function renderCategories() {
+  const cats = getCategories();
+  const list = document.getElementById('catList');
+  list.innerHTML = '';
+  cats.forEach(cat => {
+    const pill = document.createElement('div');
+    pill.className = 'cat-pill';
+    pill.innerHTML = `<span>${cat}</span><button data-cat="${cat}">✕</button>`;
+    pill.querySelector('button').addEventListener('click', () => {
+      if (!confirm(`Remove category "${cat}"?`)) return;
+      saveCategories(getCategories().filter(c => c !== cat));
+      renderCategories();
+      populateCatDropdown('newCategory');
+    });
+    list.appendChild(pill);
+  });
+}
+
+document.getElementById('addCatBtn').addEventListener('click', () => {
+  const val = document.getElementById('newCatInput').value.trim();
+  if (!val) return;
+  const cats = getCategories();
+  if (!cats.includes(val)) { cats.push(val); saveCategories(cats); renderCategories(); populateCatDropdown('newCategory'); }
+  document.getElementById('newCatInput').value = '';
+});
+document.getElementById('newCatInput').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('addCatBtn').click(); });
+
+function populateCatDropdown(id, selected) {
+  const sel = document.getElementById(id);
+  const cats = getCategories();
+  sel.innerHTML = cats.map(c => `<option value="${c}"${c===selected?' selected':''}>${c}</option>`).join('');
+}
+
+// ── API CALLS ──
+async function apiCall(params) {
+  const url = getScriptUrl();
+  if (!url) { showToast('No Apps Script URL configured.', true); return null; }
+  try {
+    if (params.action === 'getItems') {
+      const res = await fetch(url + '?action=getItems&t=' + Date.now());
+      return await res.json();
+    } else {
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      });
+      return { ok: true };
+    }
+  } catch(e) {
+    showToast('Network error. Check script URL.', true);
+    return null;
+  }
+}
+
+// ── REFRESH ITEMS ──
+async function refreshItems() {
+  const btn = document.getElementById('refreshBtn');
+  btn.innerHTML = '<span class="spinner"></span>Loading…';
+  btn.disabled = true;
+  const data = await apiCall({ action: 'getItems' });
+  btn.innerHTML = '↻ Refresh from Sheet';
+  btn.disabled = false;
+  if (!data || !data.items) { showToast('Could not load items.', true); return; }
+  allItems = data.items;
+  renderItemsTable();
+}
+
+document.getElementById('refreshBtn').addEventListener('click', refreshItems);
+
+function renderItemsTable() {
+  const tbody = document.getElementById('itemsTbody');
+  if (!allItems.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;color:var(--text-light);font-style:italic">No items yet. Add one below.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = '';
+  allItems.forEach(item => {
+    const pct = Math.min(100, Math.round((item.pledged / item.goal) * 100));
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="item-title-cell">${item.title}</td>
+      <td>${item.category}</td>
+      <td><div class="progress-mini"><div class="bar"><div class="fill" style="width:${pct}%"></div></div><span>$${item.pledged}/$${item.goal}</span></div></td>
+      <td><div class="action-btns">
+        <button class="btn-sm ghost" data-edit="${item.id}">Edit</button>
+        <button class="btn-sm danger" data-del="${item.id}">Delete</button>
+      </div></td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openEditModal(b.dataset.edit)));
+  tbody.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+    const item = allItems.find(i => i.id == b.dataset.del);
+    if (!confirm(`Delete "${item?.title}"?`)) return;
+    b.textContent = '…'; b.disabled = true;
+    await apiCall({ action: 'deleteItem', itemId: b.dataset.del });
+    showToast('Item deleted.');
+    await refreshItems();
+  }));
+}
+
+// ── ADD ITEM ──
+document.getElementById('addItemBtn').addEventListener('click', async () => {
+  const title = document.getElementById('newTitle').value.trim();
+  const category = document.getElementById('newCategory').value;
+  const goal = parseFloat(document.getElementById('newGoal').value);
+  const description = document.getElementById('newDescription').value.trim();
+  if (!title || !goal || goal < 1) { showToast('Title and goal amount are required.', true); return; }
+
+  const btn = document.getElementById('addItemBtn');
+  btn.innerHTML = '<span class="spinner"></span>Adding…'; btn.disabled = true;
+
+  const imageUrl = document.getElementById('newImageUrl').value.trim();
+  await apiCall({ action: 'addItem', title, category, goal, description, image: imageUrl });
+
+  btn.innerHTML = 'Add Item'; btn.disabled = false;
+  document.getElementById('newTitle').value = '';
+  document.getElementById('newGoal').value = '';
+  document.getElementById('newDescription').value = '';
+  document.getElementById('newImageUrl').value = '';
+  showToast('Item added.');
+  await refreshItems();
+});
+
+// ── EDIT MODAL ──
+function openEditModal(itemId) {
+  editingItem = allItems.find(i => i.id == itemId);
+  if (!editingItem) return;
+  document.getElementById('editModalTitle').textContent = editingItem.title;
+  document.getElementById('editTitle').value = editingItem.title;
+  document.getElementById('editGoal').value = editingItem.goal;
+  document.getElementById('editDescription').value = editingItem.description || '';
+  const editImgInput = document.getElementById('editImageUrl');
+  const editImgPreview = document.getElementById('editImagePreview');
+  editImgInput.value = editingItem.image || '';
+  if (editingItem.image) { editImgPreview.src = normalizeImageUrl(editingItem.image); editImgPreview.classList.add('visible'); }
+  else { editImgPreview.classList.remove('visible'); editImgPreview.src = ''; }
+  editImgInput.oninput = function() {
+    var url = normalizeImageUrl(editImgInput.value.trim());
+    if (url) { editImgPreview.src = url; editImgPreview.classList.add('visible'); }
+    else { editImgPreview.classList.remove('visible'); editImgPreview.src = ''; }
+  };
+  document.getElementById('overridePledged').value = editingItem.pledged;
+  populateCatDropdown('editCategory', editingItem.category);
+
+  const pl = document.getElementById('pledgesList');
+  const pledges = editingItem.pledges || [];
+  if (!pledges.length) {
+    pl.innerHTML = '<div class="empty-pledges">No pledges recorded yet.</div>';
+  } else {
+    pl.innerHTML = '';
+    pledges.forEach((p, idx) => {
+      const date = new Date(p.date).toLocaleDateString('en-CA', { month:'short', day:'numeric' });
+      const row = document.createElement('div');
+      row.className = 'pledge-row';
+      row.innerHTML = `
+        <div>
+          <div class="pledge-name">${p.name}</div>
+          ${p.note ? `<div class="pledge-note">${p.note}</div>` : ''}
+          <div class="pledge-date">${date}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="pledge-amt">$${p.amount}</span>
+          <button class="btn-sm danger" data-del-pledge="${idx}" style="padding:4px 8px;font-size:0.65rem">✕</button>
+        </div>`;
+      pl.appendChild(row);
+    });
+    pl.querySelectorAll('[data-del-pledge]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const idx = parseInt(btn.dataset.delPledge);
+        btn.textContent = '…'; btn.disabled = true;
+        await apiCall({ action: 'deletePledge', itemId: editingItem.id, pledgeIndex: idx });
+        showToast('Pledge removed.');
+        await refreshItems();
+        openEditModal(editingItem.id);
+      });
+    });
+  }
+
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+document.getElementById('editClose').addEventListener('click', closeEditModal);
+document.getElementById('editCancel').addEventListener('click', closeEditModal);
+document.getElementById('editOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeEditModal(); });
+function closeEditModal() { document.getElementById('editOverlay').classList.remove('open'); editingItem = null; }
+
+document.getElementById('editSave').addEventListener('click', async () => {
+  const btn = document.getElementById('editSave');
+  btn.innerHTML = '<span class="spinner"></span>Saving…'; btn.disabled = true;
+  await apiCall({
+    action: 'updateItem',
+    itemId: editingItem.id,
+    title: document.getElementById('editTitle').value.trim(),
+    category: document.getElementById('editCategory').value,
+    goal: parseFloat(document.getElementById('editGoal').value),
+    description: document.getElementById('editDescription').value.trim(),
+    image: document.getElementById('editImageUrl').value.trim()
+  });
+  btn.innerHTML = 'Save Changes'; btn.disabled = false;
+  showToast('Item updated.');
+  closeEditModal();
+  await refreshItems();
+});
+
+document.getElementById('overrideBtn').addEventListener('click', async () => {
+  const val = parseFloat(document.getElementById('overridePledged').value);
+  if (isNaN(val) || val < 0) return;
+  const btn = document.getElementById('overrideBtn');
+  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+  await apiCall({ action: 'overridePledged', itemId: editingItem.id, pledged: val });
+  btn.innerHTML = 'Set Total'; btn.disabled = false;
+  showToast('Total updated.');
+  await refreshItems();
+  openEditModal(editingItem.id);
+});
+
+// ── IMAGE URL NORMALIZER ──
+function normalizeImageUrl(url) {
+  if (!url) return '';
+  var m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if (m) return 'https://drive.google.com/uc?export=view&id=' + m[1];
+  var m2 = url.match(/drive\.google\.com\/open\?id=([^&]+)/);
+  if (m2) return 'https://drive.google.com/uc?export=view&id=' + m2[1];
+  return url;
+}
+
+// ── TOAST ──
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
