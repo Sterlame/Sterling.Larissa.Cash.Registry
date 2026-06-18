@@ -71,6 +71,8 @@
     .progress-fill { height: 100%; background: var(--green-mid); border-radius: 2px; transition: width 0.5s ease; }
     .card-status { font-size: 0.72rem; letter-spacing: 0.06em; color: var(--text-light); }
     .fund-card.funded .card-status { color: var(--green-mid); font-weight: 500; }
+    .card-contributors { margin-top: 6px; font-size: 0.72rem; color: var(--green-mid); line-height: 1.5; font-style: italic; }
+    .card-contributors span { display: block; }
     .pledge-btn { margin-top: 4px; background: var(--green-deep); color: var(--white); border: none; padding: 11px; font-family: 'Jost', sans-serif; font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; width: 100%; }
     .pledge-btn:hover { background: var(--green-mid); }
     .pledge-btn:disabled { background: var(--border); cursor: default; }
@@ -280,6 +282,7 @@ function renderCards() {
         <div class="card-amounts"><span class="pledged-amt">$${item.pledged} pledged</span><span>of $${item.goal}</span></div>
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
         <div class="card-status">${funded ? '✓ Fully funded — thank you!' : '$'+remaining+' remaining'}</div>
+        ${funded && item.pledges && item.pledges.length ? `<div class="card-contributors">${item.pledges.map(p => `<span>🌿 ${p.name}</span>`).join('')}</div>` : ''}
       </div>
       <button class="pledge-btn" data-id="${item.id}" ${funded?'disabled':''}>
         ${funded ? 'Funded' : 'Pledge'}
