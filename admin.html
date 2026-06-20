@@ -24,6 +24,8 @@
     .login-btn { margin-top:14px; width:100%; background:var(--green-deep); color:var(--white); border:none; padding:12px; font-family:'Jost',sans-serif; font-size:0.75rem; letter-spacing:0.18em; text-transform:uppercase; cursor:pointer; border-radius:2px; }
     .login-btn:hover { background:var(--green-mid); }
     .login-error { margin-top:12px; font-size:0.78rem; color:var(--red); display:none; }
+    .forgot-link { background:none; border:none; color:var(--text-light); font-family:'Jost',sans-serif; font-size:0.75rem; cursor:pointer; margin-top:12px; text-decoration:underline; letter-spacing:0.04em; }
+    .forgot-link:hover { color:var(--green-mid); }
 
     #adminPanel { display:none; }
     .admin-header { background:var(--green-deep); color:var(--white); padding:16px 28px; display:flex; align-items:center; justify-content:space-between; }
@@ -125,6 +127,28 @@
     <input type="password" id="passwordInput" placeholder="Enter password" />
     <button class="login-btn" id="loginBtn">Enter</button>
     <div class="login-error" id="loginError">Incorrect password.</div>
+    <button class="forgot-link" id="forgotBtn">Forgot password?</button>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD -->
+<div class="login-wrap" id="forgotWrap" style="display:none">
+  <div class="login-box">
+    <div class="monogram">S&amp;L</div>
+    <p>Password Recovery</p>
+    <div id="forgotStep1">
+      <div style="font-size:0.8rem;color:var(--text-light);margin-bottom:20px;line-height:1.6;">Answer your security question to reset your password.</div>
+      <div style="font-size:0.78rem;font-weight:500;color:var(--green-deep);margin-bottom:10px;text-align:left;">What is Larissa's middle name?</div>
+      <input type="text" id="securityAnswer" placeholder="Your answer" style="letter-spacing:0.05em;" />
+      <button class="login-btn" id="checkAnswerBtn">Continue</button>
+      <div class="login-error" id="answerError">Incorrect answer.</div>
+    </div>
+    <div id="forgotStep2" style="display:none">
+      <div style="font-size:0.8rem;color:var(--text-light);margin-bottom:20px;line-height:1.6;">Set a new password.</div>
+      <input type="password" id="newPasswordInput" placeholder="New password" style="letter-spacing:0.2em;" />
+      <button class="login-btn" id="setNewPassBtn">Set Password</button>
+    </div>
+    <button class="forgot-link" id="backToLoginBtn" style="margin-top:14px;">← Back to login</button>
   </div>
 </div>
 
@@ -262,6 +286,68 @@ function tryLogin() {
     document.getElementById('passwordInput').value = '';
   }
 }
+// ── FORGOT PASSWORD ──
+// Security answer is stored as lowercase trimmed for comparison
+var SECURITY_ANSWER_KEY = 'sl_security_answer';
+function getSecurityAnswer() {
+  // Default answer — change this to Larissa's actual middle name before deploying
+  return (localStorage.getItem(SECURITY_ANSWER_KEY) || 'paige').toLowerCase().trim();
+}
+
+document.getElementById('forgotBtn').addEventListener('click', () => {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('forgotWrap').style.display = 'flex';
+  document.getElementById('forgotStep1').style.display = '';
+  document.getElementById('forgotStep2').style.display = 'none';
+  document.getElementById('securityAnswer').value = '';
+  document.getElementById('answerError').style.display = 'none';
+  document.getElementById('newPasswordInput').value = '';
+});
+
+document.getElementById('backToLoginBtn').addEventListener('click', () => {
+  document.getElementById('forgotWrap').style.display = 'none';
+  document.getElementById('loginWrap').style.display = 'flex';
+});
+
+document.getElementById('checkAnswerBtn').addEventListener('click', () => {
+  const answer = document.getElementById('securityAnswer').value.toLowerCase().trim();
+  if (answer === getSecurityAnswer()) {
+    document.getElementById('forgotStep1').style.display = 'none';
+    document.getElementById('forgotStep2').style.display = '';
+    document.getElementById('answerError').style.display = 'none';
+  } else {
+    document.getElementById('answerError').style.display = 'block';
+    document.getElementById('securityAnswer').value = '';
+  }
+});
+
+document.getElementById('securityAnswer').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('checkAnswerBtn').click();
+});
+
+document.getElementById('setNewPassBtn').addEventListener('click', () => {
+  const newPass = document.getElementById('newPasswordInput').value.trim();
+  if (!newPass) return;
+  localStorage.setItem(PASS_KEY, newPass);
+  document.getElementById('forgotWrap').style.display = 'none';
+  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('passwordInput').value = '';
+  // Show a subtle confirmation
+  const err = document.getElementById('loginError');
+  err.style.display = 'block';
+  err.style.color = 'var(--green-mid)';
+  err.textContent = 'Password updated. Please log in.';
+  setTimeout(() => {
+    err.style.display = 'none';
+    err.style.color = 'var(--red)';
+    err.textContent = 'Incorrect password.';
+  }, 4000);
+});
+
+document.getElementById('newPasswordInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('setNewPassBtn').click();
+});
+
 document.getElementById('logoutBtn').addEventListener('click', () => {
   document.getElementById('adminPanel').style.display = 'none';
   document.getElementById('loginWrap').style.display = 'flex';
