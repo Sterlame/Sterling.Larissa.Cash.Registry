@@ -266,12 +266,16 @@ const PASS_KEY   = 'sl_admin_pass';
 const SCRIPT_KEY = 'sl_script_url';
 const CATS_KEY   = 'sl_categories';
 
+// ── HARDCODED DEFAULT SCRIPT URL ──
+// Updated June 2026 — replace this if you redeploy the Apps Script again
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_LjJk03w25kwgZSR9IQf7y_WHcBEJrvaC1hanEfCJW-XZaMofl97Y1oFzuB3VfCYj/exec';
+
 let editingItem = null;
 let allItems = [];
 
 // ── AUTH ──
 function getPass() { return localStorage.getItem(PASS_KEY) || 'sterling2026'; }
-function getScriptUrl() { return localStorage.getItem(SCRIPT_KEY) || ''; }
+function getScriptUrl() { return localStorage.getItem(SCRIPT_KEY) || DEFAULT_SCRIPT_URL; }
 
 document.getElementById('loginBtn').addEventListener('click', tryLogin);
 document.getElementById('passwordInput').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
@@ -287,10 +291,8 @@ function tryLogin() {
   }
 }
 // ── FORGOT PASSWORD ──
-// Security answer is stored as lowercase trimmed for comparison
 var SECURITY_ANSWER_KEY = 'sl_security_answer';
 function getSecurityAnswer() {
-  // Default answer — change this to Larissa's actual middle name before deploying
   return (localStorage.getItem(SECURITY_ANSWER_KEY) || 'paige').toLowerCase().trim();
 }
 
@@ -332,7 +334,6 @@ document.getElementById('setNewPassBtn').addEventListener('click', () => {
   document.getElementById('forgotWrap').style.display = 'none';
   document.getElementById('loginWrap').style.display = 'flex';
   document.getElementById('passwordInput').value = '';
-  // Show a subtle confirmation
   const err = document.getElementById('loginError');
   err.style.display = 'block';
   err.style.color = 'var(--green-mid)';
@@ -356,10 +357,13 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 
 // ── INIT ──
 function initAdmin() {
-  document.getElementById('settingsScriptUrl').value = getScriptUrl();
+  // Always write the current effective URL into localStorage so it persists
+  const currentUrl = getScriptUrl();
+  localStorage.setItem(SCRIPT_KEY, currentUrl);
+  document.getElementById('settingsScriptUrl').value = currentUrl;
   renderCategories();
   populateCatDropdown('newCategory');
-  if (getScriptUrl()) refreshItems();
+  refreshItems();
 }
 
 // ── SETTINGS ──
