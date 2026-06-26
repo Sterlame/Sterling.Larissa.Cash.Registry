@@ -172,14 +172,6 @@
       </div>
       <div class="admin-card-body">
         <div class="settings-row">
-          <label>Apps Script URL</label>
-          <input type="url" id="settingsScriptUrl" placeholder="https://script.google.com/macros/s/…/exec" />
-        </div>
-        <div class="settings-row">
-          <label></label>
-          <span class="hint">Paste your Web App URL here after deploying the Apps Script.</span>
-        </div>
-        <div class="settings-row">
           <label>Admin Password</label>
           <input type="password" id="settingsPassword" placeholder="Leave blank to keep current" />
         </div>
@@ -275,7 +267,7 @@ let allItems = [];
 
 // ── AUTH ──
 function getPass() { return localStorage.getItem(PASS_KEY) || 'sterling2026'; }
-function getScriptUrl() { return localStorage.getItem(SCRIPT_KEY) || DEFAULT_SCRIPT_URL; }
+function getScriptUrl() { return DEFAULT_SCRIPT_URL; }
 
 document.getElementById('loginBtn').addEventListener('click', tryLogin);
 document.getElementById('passwordInput').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
@@ -357,10 +349,6 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
 
 // ── INIT ──
 function initAdmin() {
-  // Always write the current effective URL into localStorage so it persists
-  const currentUrl = getScriptUrl();
-  localStorage.setItem(SCRIPT_KEY, currentUrl);
-  document.getElementById('settingsScriptUrl').value = currentUrl;
   renderCategories();
   populateCatDropdown('newCategory');
   refreshItems();
@@ -368,12 +356,9 @@ function initAdmin() {
 
 // ── SETTINGS ──
 document.getElementById('saveSettings').addEventListener('click', () => {
-  const url = document.getElementById('settingsScriptUrl').value.trim();
   const pass = document.getElementById('settingsPassword').value;
-  if (url) localStorage.setItem(SCRIPT_KEY, url);
   if (pass) { localStorage.setItem(PASS_KEY, pass); document.getElementById('settingsPassword').value = ''; }
   showToast('Settings saved.');
-  if (url) refreshItems();
 });
 
 // ── CATEGORIES (stored locally, synced to sheet on item operations) ──
