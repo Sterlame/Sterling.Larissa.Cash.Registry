@@ -278,7 +278,7 @@ function renderCards() {
       <div class="card-title">${item.title}</div>
       <div class="card-desc">${item.description}</div>
       <div>
-
+        <div class="card-amounts"><span class="pledged-amt">$${item.pledged}</span><span>of $${item.goal}</span></div>
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
         <div class="card-status">${funded ? '✓ Fully funded — thank you!' : 'Still accepting pledges'}</div>
         ${funded && item.pledges && item.pledges.length ? `<div class="card-contributors">${item.pledges.map(p => `<span>🌿 ${p.name}</span>`).join('')}</div>` : ''}
